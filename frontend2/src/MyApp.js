@@ -6,10 +6,13 @@ import { useState, useEffect } from "react";
 import axios from "axios";
 
 function MyApp() {
+  const queryParameters = new URLSearchParams(window.location.search);
+  const model = queryParameters.get("model") || 1;
   const [selectedFile, setSelectedFile] = useState(null);
   const [selectedIngredients, setSelectedIngredients] = useState([]);
 
   useEffect(() => {
+    setSelectedIngredients([]);
     const getPrediction = async () => {
       if (!selectedFile) {
         console.error("No image selected.");
@@ -29,7 +32,7 @@ function MyApp() {
         formData.append("imageData", blob);
 
         const response = await axios.post(
-          "http://localhost:8000/classify",
+          `http://localhost:8000/classify${model}`,
           formData,
           {
             headers: {

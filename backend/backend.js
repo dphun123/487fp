@@ -19,7 +19,7 @@ const upload = multer({ dest: "uploads/" });
 config();
 async function loadModel() {
   try {
-    const model = await tf.loadGraphModel("file://./tfjs_model/model.json");
+    const model = await tf.loadGraphModel("file://./tfjs_model3/model.json");
     console.log("Model loaded successfully");
     return model;
   } catch (error) {
@@ -30,9 +30,38 @@ async function loadModel() {
 
 const model = await loadModel();
 
-const classLabels = ["banana", "bread", "green onion", "ground beef", "potato"];
+// const classLabels = ["banana", "bread", "green onion", "ground beef", "potato"];
+// const classLabels = [
+//   "apple",
+//   "banana",
+//   "bread",
+//   "broccoli",
+//   "brown rice",
+//   "butter",
+//   "chicken meat",
+//   "egg",
+//   "green onion",
+//   "ground beef",
+//   "olive oil",
+//   "onion",
+//   "potato",
+//   "tomato",
+//   "vegetable oil",
+//   "white rice",
+// ];
 
-app.post("/classify", upload.single("imageData"), async (req, res) => {
+const classLabels = [
+  "banana",
+  "bread",
+  "chicken meat",
+  "green onion",
+  "ground beef",
+  "olive oil",
+  "tomato",
+  "vegetable oil",
+];
+
+app.post("/classify2", upload.single("imageData"), async (req, res) => {
   try {
     console.log(req.file);
     const buffer = await fs.promises.readFile(req.file.path);
@@ -133,14 +162,23 @@ async function detectObjects(imageTensor) {
       const predictedClassIndex = tf.argMax(predictionArray).dataSync()[0];
       const predictedProbability = predictionArray[predictedClassIndex];
       // if probability high enough
-      if (predictedProbability > 0.8) {
+      if (predictedProbability > 0.96) {
         // add to labels
         const predictedClass = classLabels[predictedClassIndex];
         labels.add(predictedClass);
-        console.log(predictedClass, predictedProbability);
         // green box
+        ctx.globalAlpha = 1.0;
         ctx.strokeStyle = "green";
+        ctx.font = "20px Arial";
+        ctx.fillStyle = "black";
+        const textWidth = ctx.measureText(predictedClass).width;
+        ctx.fillText(
+          predictedClass,
+          x + window.shape[1] / 2 - textWidth / 2,
+          y
+        );
       } else {
+        ctx.globalAlpha = 0.3;
         ctx.strokeStyle = "red";
       }
       ctx.strokeRect(x, y, window.shape[1], window.shape[0]);
@@ -192,7 +230,7 @@ async function downloadImage(image, filePath) {
   console.log(`Image saved to: ${filePath}`);
 }
 
-app.post("/classify2", upload.single("imageData"), async (req, res) => {
+app.post("/classify1", upload.single("imageData"), async (req, res) => {
   try {
     const buffer = await fs.promises.readFile(req.file.path);
     // resize and normalize image
@@ -206,7 +244,7 @@ app.post("/classify2", upload.single("imageData"), async (req, res) => {
     const predictedClassIndex = tf.argMax(predictionArray).dataSync()[0];
     const predictedProbability = predictionArray[predictedClassIndex];
     const predictedClass = classLabels[predictedClassIndex];
-    console.log(predictedClass, predictedProbability);
+    // console.log(predictedClass, predictedProbability);
     // Return the classification result
     console.log([predictedClass]);
     res.send({ prediction: [predictedClass] });
